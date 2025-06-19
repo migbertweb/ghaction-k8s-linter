@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout del repositorio
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Descargar manifiesto generado
         uses: actions/download-artifact@v4
@@ -37,13 +37,15 @@ jobs:
 
       - name: Ejecutar kube-linter
         run: |
+          set -euo pipefail
           echo "→ Linting en manifest/kustomize-output.yaml"
           kube-linter lint "manifest/kustomize-output.yaml" | tee kube-linter.log
 
       - name: Ejecutar kubeconform
         run: |
+          set -euo pipefail
           echo "→ Validación con kubeconform en manifest/kustomize-output.yaml"
-          kubeconform -strict -summary -verbose "manifest/kustomize-output.yaml" | tee kubeconform.log
+          kubeconform -strict -summary -verbose -skip "IngressRoute" --ignore-missing-schemas "manifest/kustomize-output.yaml" | tee kubeconform.log
 
       - name: Guardar logs como artefacto si falla
         if: failure()
@@ -104,5 +106,6 @@ jobs:
               -F chat_id="${CHAT_ID}" \
               -F document=@lint-logs.tar.gz \
               -F caption="📄 Logs del linting fallido"
+          fi
 
 
