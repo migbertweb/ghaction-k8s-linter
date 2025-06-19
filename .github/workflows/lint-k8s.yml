@@ -33,7 +33,6 @@ jobs:
         with:
           kubeconform: latest
           kube-linter: latest
-  
 
       - name: Ejecutar kube-linter
         run: |
@@ -115,5 +114,37 @@ jobs:
               -F document=@lint-logs.tar.gz \
               -F caption="📄 Logs del linting fallido"
           fi
+      - name: Escribir resumen en panel de Actions
+        if: always()
+        env:
+          LINT_RESULT: ${{ needs.lint.result }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          COMMIT: ${{ github.sha }}
+          FILE: manifest/kustomize-output.yaml
+        run: |
+          if [ "$LINT_RESULT" = "success" ]; then
+            STATUS="✅ *Linting exitoso*"
+            KUBE_LINTER="✅ Passed"
+            KUBECONFORM="✅ Passed"
+          else
+            STATUS="❌ *Linting fallido*"
+            KUBE_LINTER="❌ Falló"
+            KUBECONFORM="❌ Falló"
+          fi
 
-
+          {
+            echo "### 📄 Resultado del análisis de manifiestos"
+            echo ""
+            echo "${STATUS}"
+            echo ""
+            echo "| Checker       | Estado       |"
+            echo "|---------------|--------------|"
+            echo "| kube-linter   | ${KUBE_LINTER} |"
+            echo "| kubeconform   | ${KUBECONFORM} |"
+            echo ""
+            echo "- 📦 *Repo:* \`${REPO}\`"
+            echo "- 🌿 *Branch:* \`${BRANCH}\`"
+            echo "- 📄 *Archivo:* \`${FILE}\`"
+            echo "- 🔗 [Ver commit](https://github.com/${REPO}/commit/${COMMIT})"
+          } >> "$GITHUB_STEP_SUMMARY"
