@@ -83,7 +83,11 @@ jobs:
           if [ "$LINT_RESULT" = "success" ]; then
             STATUS_ICON="✅"
             STATUS_TEXT="*Linting exitoso*"
-            MESSAGE="${STATUS_ICON} ${STATUS_TEXT}\n📦 *Repo:* \`${REPO}\`\n🌿 *Branch:* \`${BRANCH}\`\n📄 *Archivo:* \`${FILE}\`\n🔗 [Ver commit](https://github.com/${REPO}/commit/${COMMIT})"
+            MESSAGE="${STATUS_ICON} ${STATUS_TEXT}
+            📦 *Repo:* \`${REPO}\`
+            🌿 *Branch:* \`${BRANCH}\`
+            📄 *Archivo:* \`${FILE}\`
+            🔗 [Ver commit](https://github.com/${REPO}/commit/${COMMIT})"
 
             curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
               -d chat_id="${CHAT_ID}" \
@@ -92,7 +96,11 @@ jobs:
           else
             STATUS_ICON="❌"
             STATUS_TEXT="*Linting fallido*"
-            MESSAGE="${STATUS_ICON} ${STATUS_TEXT}\n📦 *Repo:* \`${REPO}\`\n🌿 *Branch:* \`${BRANCH}\`\n📄 *Archivo:* \`${FILE}\`\n🔗 [Ver commit](https://github.com/${REPO}/commit/${COMMIT})"
+            MESSAGE="${STATUS_ICON} ${STATUS_TEXT}
+            📦 *Repo:* \`${REPO}\`
+            🌿 *Branch:* \`${BRANCH}\`
+            📄 *Archivo:* \`${FILE}\`
+            🔗 [Ver commit](https://github.com/${REPO}/commit/${COMMIT})"
 
             curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
               -d chat_id="${CHAT_ID}" \
