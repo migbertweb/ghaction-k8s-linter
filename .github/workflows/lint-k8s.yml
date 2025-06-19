@@ -2,12 +2,6 @@ name: Linter K8s Reutilizable con Telegram
 
 on:
   workflow_call:
-    inputs:
-      manifest:
-        description: 'Ruta del archivo YAML generado por KSOPS/Kustomize'
-        required: true
-        type: string
-
     secrets:
       TELEGRAM_BOT_TOKEN:
         required: true
@@ -31,7 +25,7 @@ jobs:
       - name: Descargar manifiesto generado
         uses: actions/download-artifact@v4
         with:
-          name: final-yaml
+          name: kustomize-manifests
           path: manifest
 
       - name: Instalar kube-linter y kubeconform con arkade
@@ -43,13 +37,13 @@ jobs:
 
       - name: Ejecutar kube-linter
         run: |
-          echo "→ Linting en ${{ inputs.manifest }}"
-          kube-linter lint "${{ inputs.manifest }}" | tee kube-linter.log
+          echo "→ Linting en manifest/kustomize-output.yaml"
+          kube-linter lint "manifest/kustomize-output.yaml" | tee kube-linter.log
 
       - name: Ejecutar kubeconform
         run: |
-          echo "→ Validación con kubeconform en ${{ inputs.manifest }}"
-          kubeconform -strict -summary -verbose "${{ inputs.manifest }}" | tee kubeconform.log
+          echo "→ Validación con kubeconform en manifest/kustomize-output.yaml"
+          kubeconform -strict -summary -verbose "manifest/kustomize-output.yaml" | tee kubeconform.log
 
       - name: Guardar logs como artefacto si falla
         if: failure()
@@ -82,7 +76,7 @@ jobs:
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
           COMMIT: ${{ github.sha }}
-          FILE: ${{ inputs.manifest }}
+          FILE: manifest/kustomize-output.yaml
         run: |
           if [ "$LINT_RESULT" = "success" ]; then
             STATUS_ICON="✅"
