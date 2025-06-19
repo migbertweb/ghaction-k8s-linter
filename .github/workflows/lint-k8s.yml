@@ -84,7 +84,7 @@ jobs:
             STATUS_TEXT="*Linting exitoso*"
             MESSAGE="${STATUS_ICON} ${STATUS_TEXT}
             📦 *Repo:* \`${REPO}\`
-            🌿 *Branch:* \`${BRANCH}\`
+            🌱 *Branch:* \`${BRANCH}\`
             📄 *Archivo:* \`${FILE}\`
             🔗 [Ver commit](https://github.com/${REPO}/commit/${COMMIT})"
 
@@ -97,7 +97,7 @@ jobs:
             STATUS_TEXT="*Linting fallido*"
             MESSAGE="${STATUS_ICON} ${STATUS_TEXT}
             📦 *Repo:* \`${REPO}\`
-            🌿 *Branch:* \`${BRANCH}\`
+            🌱 *Branch:* \`${BRANCH}\`
             📄 *Archivo:* \`${FILE}\`
             🔗 [Ver commit](https://github.com/${REPO}/commit/${COMMIT})"
 
@@ -144,7 +144,7 @@ jobs:
             echo "| kubeconform   | ${KUBECONFORM} |"
             echo ""
             echo "- 📦 *Repo:* \`${REPO}\`"
-            echo "- 🌿 *Branch:* \`${BRANCH}\`"
+            echo "- 🌱 *Branch:* \`${BRANCH}\`"
             echo "- 📄 *Archivo:* \`${FILE}\`"
             echo "- 🔗 [Ver commit](https://github.com/${REPO}/commit/${COMMIT})"
           } >> "$GITHUB_STEP_SUMMARY"
