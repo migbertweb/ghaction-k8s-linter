@@ -1,10 +1,10 @@
-name: Linter K8s Reutilizable
+name: Linter K8s Reutilizable con Telegram
 
 on:
   workflow_call:
     inputs:
-      path:
-        description: "Ruta donde están los manifiestos YAML"
+      manifest:
+        description: 'Ruta del archivo YAML generado por KSOPS/Kustomize'
         required: true
         type: string
 
@@ -25,26 +25,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout del repo
+      - name: Checkout del repositorio
         uses: actions/checkout@v3
+
+      - name: Descargar manifiesto generado
+        uses: actions/download-artifact@v4
+        with:
+          name: final-yaml
+          path: manifest
 
       - name: Instalar kube-linter y kubeconform con arkade
         uses: alexellis/arkade-get@master
         with:
           kubeconform: latest
           kube-linter: latest
+  
 
       - name: Ejecutar kube-linter
         run: |
-          echo "→ Linting con kube-linter en ${{ inputs.path }}"
-          kube-linter lint "${{ inputs.path }}" | tee kube-linter.log
+          echo "→ Linting en ${{ inputs.manifest }}"
+          kube-linter lint "${{ inputs.manifest }}" | tee kube-linter.log
 
       - name: Ejecutar kubeconform
         run: |
-          echo "→ Validación con kubeconform en ${{ inputs.path }}"
-          kubeconform -strict -summary -verbose -skip "IngressRoute" --ignore-missing-schemas "${{ inputs.path }}" | tee kubeconform.log
+          echo "→ Validación con kubeconform en ${{ inputs.manifest }}"
+          kubeconform -strict -summary -verbose "${{ inputs.manifest }}" | tee kubeconform.log
 
-      - name: Guardar logs como artefacto
+      - name: Guardar logs como artefacto si falla
         if: failure()
         uses: actions/upload-artifact@v4
         with:
@@ -75,12 +82,12 @@ jobs:
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
           COMMIT: ${{ github.sha }}
-          PATH: ${{ inputs.path }}
+          FILE: ${{ inputs.manifest }}
         run: |
           if [ "$LINT_RESULT" = "success" ]; then
             STATUS_ICON="✅"
             STATUS_TEXT="*Linting exitoso*"
-            MESSAGE="${STATUS_ICON} ${STATUS_TEXT}\n📦 *Repo:* \`${REPO}\`\n🌿 *Branch:* \`${BRANCH}\`\n🗂️ *Path:* \`${PATH}\`\n🔗 [Ver commit](https://github.com/${REPO}/commit/${COMMIT})"
+            MESSAGE="${STATUS_ICON} ${STATUS_TEXT}\n📦 *Repo:* \`${REPO}\`\n🌿 *Branch:* \`${BRANCH}\`\n📄 *Archivo:* \`${FILE}\`\n🔗 [Ver commit](https://github.com/${REPO}/commit/${COMMIT})"
 
             curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
               -d chat_id="${CHAT_ID}" \
@@ -89,17 +96,19 @@ jobs:
           else
             STATUS_ICON="❌"
             STATUS_TEXT="*Linting fallido*"
-            MESSAGE="${STATUS_ICON} ${STATUS_TEXT}\n📦 *Repo:* \`${REPO}\`\n🌿 *Branch:* \`${BRANCH}\`\n🗂️ *Path:* \`${PATH}\`\n🔗 [Ver commit](https://github.com/${REPO}/commit/${COMMIT})"
+            MESSAGE="${STATUS_ICON} ${STATUS_TEXT}\n📦 *Repo:* \`${REPO}\`\n🌿 *Branch:* \`${BRANCH}\`\n📄 *Archivo:* \`${FILE}\`\n🔗 [Ver commit](https://github.com/${REPO}/commit/${COMMIT})"
 
             curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
               -d chat_id="${CHAT_ID}" \
               -d text="${MESSAGE}" \
               -d parse_mode="Markdown"
 
-            # Enviar logs como documento comprimido
             cd logs
             tar -czf lint-logs.tar.gz *.log
+
             curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" \
               -F chat_id="${CHAT_ID}" \
               -F document=@lint-logs.tar.gz \
               -F caption="📄 Logs del linting fallido"
+
+
